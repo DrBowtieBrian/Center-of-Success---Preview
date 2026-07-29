@@ -537,6 +537,30 @@ const VIRTUES = [
   ['Teamwork + Explore','Patience','Disciplined timing that allows learning, people, and shared work to mature.'],
   ['Explore + Respect','Peace','Ordered openness: engaging uncertainty without losing the center.'],
 ];
+/* CircleUp Formation Standard v1.0 — the six movements of a faithful session.
+   Constitution Art. XI: CircleUp is not merely a meeting, it is a formation rhythm. */
+const MOVEMENTS = [
+  ['Center','Return the group to the deeper purpose.','What kind of success are we pursuing, and what kind of people are we becoming?','calm, rooted, invitational','0–5 min'],
+  ['Surface','Invite lived experience into the room.','What are we noticing in the real work, real relationships, and real pressure of this season?','curious, non-defensive, attentive','5–15 min'],
+  ['Name','Give truthful language to the pattern.','What is the real issue beneath the first issue?','clarifying, not controlling','15–25 min'],
+  ['Mirror','Help the group examine itself without shame.','What does this reveal about our alignment, trust, responsibility, or character?','truthful, gentle, courageous','25–40 min'],
+  ['Practice','Choose one concrete Up! key or return action.','What is the next faithful practice?','practical, bounded, hopeful','40–52 min'],
+  ['Return','Close the loop with responsibility.','What must now be said, done, repaired, supported, or reported back?','accountable, specific, mission-centered','52–60 min'],
+];
+
+/* Constitution Art. V — without respect, courage becomes aggression, generosity
+   becomes depletion, strength becomes control, peace becomes avoidance.
+   Art. VIII — which virtue is needed, which is being overused, which must be
+   integrated. A Compass of virtues alone teaches half the doctrine. */
+const OVEREXTENSION = [
+  ['Honor','Self-righteousness','Generosity','Honor that stops making room for others hardens into judgment.'],
+  ['Strength','Control','Patience','Strength that cannot wait becomes domination.'],
+  ['Courage','Recklessness','Peace','Courage without stillness spends people to prove itself.'],
+  ['Generosity','Depletion','Strength','Generosity with no boundary erases the giver.'],
+  ['Patience','Passivity','Courage','Patience that never acts becomes permission.'],
+  ['Peace','Avoidance','Honor','Peace that will not tell the truth is only quiet.'],
+];
+
 const INTEGRATIONS = [
   'Honor + Strength → Stability','Strength + Courage → Leverage','Courage + Generosity → Sacrifice',
   'Generosity + Patience → Grace','Patience + Peace → Serenity','Peace + Honor → Dignity'
@@ -1228,13 +1252,33 @@ function levelUpView(){
   return `<div class="stagger">
     ${backHeader('LevelUp', "go('academy')")}
     <p class="sub" style="padding:0 2px 16px">Skills train practices. LevelUp integrates practices. The Compass names the virtues being formed.</p>
-    ${VIRTUES.map(v=>`
+    ${VIRTUES.map(v=>{
+      const o = OVEREXTENSION.find(x=>x[0]===v[1]);
+      return `
       <div class="card" style="margin-bottom:10px">
         <p class="tiny muted">${v[0]}</p>
         <p class="serif" style="font-size:23px;color:var(--clay);margin:5px 0 6px">${v[1]}</p>
         <p class="small muted" style="line-height:1.5">${v[2]}</p>
-      </div>`).join('')}
-    <div class="section-h"><h3>Integration</h3></div>
+        ${o?`
+        <div style="margin-top:13px;padding-top:12px;border-top:1px solid var(--line)">
+          <div style="display:flex;gap:9px;align-items:flex-start">
+            <span style="color:var(--clay);flex:0 0 auto;margin-top:1px">${icon('scale',16)}</span>
+            <div style="flex:1">
+              <p class="tiny" style="font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--clay)">Overextended → ${o[1]}</p>
+              <p class="small muted" style="margin-top:5px;line-height:1.5">${o[3]}</p>
+              <p class="tiny" style="margin-top:7px;color:var(--moss);font-weight:600">Corrected by practicing ${o[2]}</p>
+            </div>
+          </div>
+        </div>`:''}
+      </div>`;}).join('')}
+
+    <div class="card" style="margin-top:4px;background:linear-gradient(150deg,rgba(140,59,46,.06),rgba(184,137,43,.05))">
+      <p class="quote-block" style="border-color:var(--clay)">Maturity is not choosing one virtue and neglecting the others. It is learning to hold virtues in tension without collapsing into extremes.</p>
+      <p class="tiny muted" style="margin-top:12px;line-height:1.55">Constitution, Article VIII. The test is not which virtue you have — it is which virtue is needed, which is being overused, and which must be integrated.</p>
+    </div>
+
+    <div class="section-h"><h3>Expressions of Character</h3></div>
+    <p class="tiny muted" style="padding:0 2px 12px;line-height:1.55">Virtues describe inward formation. Expressions describe what formed character feels like when it becomes visible in a life.</p>
     <div class="card"><div class="chips">${INTEGRATIONS.map(x=>`<span class="chip">${x}</span>`).join('')}</div></div>
   </div>`;
 }
@@ -1272,11 +1316,23 @@ function openSession(ci, title){
   openSheet(`
     <p class="eyebrow">${c.name}</p>
     <h2 class="serif" style="font-size:24px;margin:6px 0 10px">${title}</h2>
-    <p class="sub">Each CircleUp follows the same rhythm: name the pressure, discern together, own what is yours, and commit to one faithful step.</p>
+    <p class="sub">A faithful CircleUp helps people tell the truth together, protect dignity, choose one practice, and return to mission with greater trust. Six movements, sixty minutes.</p>
     <div class="card" style="margin-top:16px">
-      ${['Open with the SOIL Check','Share one real moment from the week','Name what is yours to own','Commit to one next faithful step'].map((t,i)=>`
-        <div class="path-step"><span class="path-num">${i+1}</span><div><b style="letter-spacing:.04em;text-transform:none;font-size:14px">${t}</b></div></div>`).join('')}
+      ${MOVEMENTS.map(([name,fn,q,posture,time],i)=>`
+        <div class="path-step">
+          <span class="path-num">${i+1}</span>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+              <b style="font-size:14px">${name}</b>
+              <span class="tiny muted" style="flex:0 0 auto">${time}</span>
+            </div>
+            <p style="margin-top:4px">${fn}</p>
+            <p class="tiny" style="margin-top:6px;font-style:italic;color:var(--moss);line-height:1.5">“${q}”</p>
+            <p class="tiny muted" style="margin-top:5px">Facilitator posture: ${posture}</p>
+          </div>
+        </div>`).join('')}
     </div>
+    <p class="tiny muted" style="margin-top:10px;line-height:1.55">From CircleUp Formation Standard v1.0. This is not a rigid agenda — it is an interpretive and formation protocol.</p>
     <button class="btn block" style="margin-top:14px" onclick="closeSheet();toast('Committed. Your circle can see it.')">Commit to attend</button>
     <button class="textbtn" style="width:100%" onclick="closeSheet()">Not this time</button>`);
 }
