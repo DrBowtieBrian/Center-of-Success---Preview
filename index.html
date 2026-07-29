@@ -671,7 +671,6 @@ const DEFAULT_STATE = {
   name:'Brian',
   entries:[],
   loops:[],
-  streak:0,
   lastActive:null,
   seeded:false,
   skills:{Communication:78, Energy:64, Network:58, Teamwork:71, Explore:62, Respect:81},
@@ -711,7 +710,6 @@ function seed(){
      mood:'Steady', tags:['Communication','Teamwork']},
   ];
   S.loops = [{ts:now-D*1.1},{ts:now-D*4},{ts:now-D*6},{ts:now-D*8},{ts:now-D*9},{ts:now-D*11},{ts:now-D*13},{ts:now-D*15}];
-  S.streak = 8;
   S.seeded = true;
   save();
 }
@@ -739,6 +737,11 @@ function metrics(){
           alignment, rhythm, rhythmDays:days.size, soilCount:soil.length};
 }
 function grade(n){ return n>=85?'Excellent' : n>=75?'Good' : n>=60?'Building' : 'Early'; }
+
+// Rest counts as rhythm. No language here may shame a day off. (Constitution §1)
+function rhythmWord(days){
+  return days>=5 ? 'Steady rhythm' : days>=3 ? 'Holding' : days>=1 ? 'Returning' : 'Begin when ready';
+}
 
 function greetingWord(){
   const h = new Date().getHours();
@@ -874,7 +877,8 @@ VIEWS.today = {
       <div class="section-h"><h3>Your rhythm</h3><button onclick="go('dashboard')">Dashboard</button></div>
       <div class="statgrid">
         <div class="stat">
-          <div><p class="label">Day streak</p><p class="num">${S.streak}</p><p class="delta">Keep the rhythm</p></div>
+          <div><p class="label">Practiced this week</p><p class="num">${m.rhythmDays}<span style="font-size:16px;color:var(--text-3)">/7</span></p>
+          <p class="delta">${rhythmWord(m.rhythmDays)}</p></div>
           ${icon('sprout',20)}
         </div>
         <div class="stat">
@@ -882,6 +886,9 @@ VIEWS.today = {
           ${ringSVG(m.alignment)}
         </div>
       </div>
+      <p class="tiny muted" style="margin-top:9px;padding:0 2px;line-height:1.5">
+        Rest counts as rhythm. These measure your practice, not your character.
+      </p>
 
       <div class="card" style="margin-top:14px;background:linear-gradient(150deg,rgba(184,137,43,.07),rgba(74,90,64,.05))">
         <p class="eyebrow gold">Today's word</p>
@@ -1013,6 +1020,17 @@ VIEWS.dashboard = {
           ${ringSVG(m.rhythm,46,4,'#6B7A5A')}
         </div>
       </div>
+
+      <button class="card tap" style="width:100%;text-align:left;margin-top:12px" onclick="openMetricNote()">
+        <div style="display:flex;gap:11px;align-items:flex-start">
+          <span style="color:var(--moss);flex:0 0 auto;margin-top:1px">${icon('scale',17)}</span>
+          <div style="flex:1">
+            <p class="small" style="font-weight:600">What these numbers mean</p>
+            <p class="tiny muted" style="margin-top:3px;line-height:1.5">They measure your practice — not your character.</p>
+          </div>
+          <span class="chev" style="margin-top:2px">${icon('chev',15)}</span>
+        </div>
+      </button>
 
       <div class="section-h"><h3>The Six Center Skills</h3><button onclick="go('academy')">Train</button></div>
       <div class="card">
@@ -1462,7 +1480,6 @@ function loopNext(){
   });
   S.skills.Communication = Math.min(100, S.skills.Communication+1);
   S.skills.Teamwork = Math.min(100, S.skills.Teamwork+1);
-  S.streak += 0;
   save();
   closeFlow();
   toast('Loop closed. Trust compounds.');
@@ -1594,7 +1611,13 @@ function rafikiHTML(){
       <input id="rafikiInput" placeholder="Ask Rafiki anything…" onkeydown="if(event.key==='Enter')askRafiki(this.value)">
       <button class="send" onclick="askRafiki(el('rafikiInput').value)">${icon('arrow',17)}</button>
     </div>
-    <p class="tiny muted" style="text-align:center;margin-top:12px">Rafiki is scripted in this preview. Live guidance connects to the model in the shipped app.</p>`;
+    <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(28,27,25,.04)">
+      <p class="tiny muted" style="line-height:1.6">
+        <b style="color:var(--text)">Rafiki is a machine.</b> It reflects, asks, and names what it sees —
+        it does not judge you, and it is not a substitute for the people and authority in your actual life.
+        Scripted in this preview; governed by <i>docs/rafiki-system-prompt.md</i> when live.
+      </p>
+    </div>`;
 }
 function escapeHTML(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -1608,6 +1631,14 @@ function askRafiki(text){
 }
 function rafikiReply(q){
   const t = q.toLowerCase(), m = metrics();
+  /* Constitution §3 — never render moral verdict on a person, and never stand in
+     for a conversation someone needs to have with an actual human being. */
+  if(/am i (a )?(good|bad)|rate me|score my character|judge me|how am i doing as/.test(t))
+    return 'That is not mine to answer, and I would not trust a machine that tried. I can tell you what you practiced and where your loops closed — the people who work with you are the ones who can tell you how you are carrying it. Ask one of them this week.';
+  if(/marriage|my wife|my husband|divorce|my faith|depressed|leave my (wife|husband)/.test(t))
+    return 'This belongs with the people who have real standing in your life — not with me. If it would help, I can help you get clear on what you want to say before that conversation. But the conversation itself needs a person.';
+  if(/rate|score|grade/.test(t) && /entry|journal|response|answer/.test(t))
+    return 'I would rather reflect it than rate it. Tell me what you wrote and I will name what comes through clearly and the one question it leaves open.';
   if(/soil|urgen|pressure/.test(t))
     return `Start with the check: is it real, whose is it, what is beneath it, and what does responding cost? You have avoided unnecessary urgency ${m.avoided} time${m.avoided===1?'':'s'} recently — the same discernment applies here.`;
   if(/pattern|see/.test(t))
@@ -1639,12 +1670,83 @@ function openMenu(){
         <span class="glyph">${icon(ic,19)}</span><span style="flex:1"><b>${t}</b></span>
         <span class="chev">${icon('chev',16)}</span></button>`).join('')}
     <div class="divider"></div>
-    <button class="textbtn" style="width:100%;color:var(--clay)" onclick="resetAll()">Reset preview data</button>`);
+    <p class="eyebrow" style="margin-bottom:10px">Your data</p>
+    <button class="rowcard tap" onclick="exportData()">
+      <span class="glyph">${icon('arrow',19)}</span>
+      <span style="flex:1"><b>Export everything</b><span>Download your journal and practice history.</span></span>
+    </button>
+    <button class="rowcard tap" onclick="confirmDelete()">
+      <span class="glyph" style="background:rgba(140,59,46,.1);color:var(--clay)">${icon('close',19)}</span>
+      <span style="flex:1"><b>Delete everything</b><span>Remove all of it, permanently, without asking anyone.</span></span>
+    </button>
+    <p class="tiny muted" style="margin-top:10px;line-height:1.55;padding:0 2px">
+      What you write here is yours. It is stored on this device only, it is never used
+      to train anything, and you can take it or destroy it at any time.
+    </p>
+    <div class="divider"></div>
+    <button class="textbtn" style="width:100%" onclick="resetAll()">Reset to the demo data</button>`);
+}
+
+/* Constitution §2 — non-extraction is structural or it is nothing.
+   Export and delete are mechanisms, not promises. */
+function exportData(){
+  const payload = {
+    exported:new Date().toISOString(),
+    note:'Your Center of Success practice history. This file is yours.',
+    entries:S.entries, loops:S.loops, skills:S.skills, rafiki:S.rafiki
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'center-of-success-export.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  closeSheet();
+  toast('Exported. The file is yours.');
+}
+function confirmDelete(){
+  openSheet(`
+    <p class="eyebrow" style="color:var(--clay)">Delete everything</p>
+    <h2 class="serif" style="font-size:24px;margin:6px 0 12px">This removes all of it.</h2>
+    <p class="sub">Every journal entry, every loop, every conversation with Rafiki. It cannot be undone, and no copy is kept anywhere else.</p>
+    <p class="sub" style="margin-top:12px">If you want a copy first, export before you delete.</p>
+    <button class="btn block" style="margin-top:18px;background:var(--clay)" onclick="deleteAll()">Delete everything</button>
+    <button class="textbtn" style="width:100%" onclick="openMenu()">Keep my data</button>`);
+}
+function deleteAll(){
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  S.seeded = true;              // stay empty; do not re-seed demo content over a deletion
+  save(); closeSheet(); go('today');
+  toast('Deleted. Nothing was kept.');
 }
 function resetAll(){
   localStorage.removeItem(KEY);
   S = JSON.parse(JSON.stringify(DEFAULT_STATE));
   seed(); closeSheet(); go('today'); toast('Preview data reset');
+}
+
+/* Constitution §5 — every metric must be able to say what it measures
+   and what it does not. If it cannot, it does not ship. */
+function openMetricNote(){
+  openSheet(`
+    <p class="eyebrow moss">About your numbers</p>
+    <h2 class="serif" style="font-size:24px;margin:6px 0 12px">Practice is measured.<br>Character is not.</h2>
+    <p class="sub">Every number in this app describes something you did. None of them describes who you are, how good you are, or how you are doing as a person. No system should claim that, least of all this one.</p>
+    <div class="card" style="margin-top:16px">
+      ${[['Alignment score','The correspondence between what you said you would do and what you actually did.','Not a grade on your character or your worth.'],
+         ['Practiced this week','Days you engaged a practice, out of seven.','Not a demand for seven. Rest is part of a rhythm, not a break in one.'],
+         ['Trust Loops closed','Commitments you carried through to a truthful report.','Not a measure of how trustworthy a person you are.'],
+         ['Unnecessary urgency caught','Times you examined pressure before acting on it.','Not a count of how often you were right.']]
+        .map(([n,is,isnt])=>`
+        <div style="padding:11px 0;border-bottom:1px solid var(--line)">
+          <b style="font-size:14.5px">${n}</b>
+          <p class="small muted" style="margin-top:5px;line-height:1.5">${is}</p>
+          <p class="tiny" style="margin-top:5px;line-height:1.5;color:var(--clay)">${isnt}</p>
+        </div>`).join('')}
+      <p class="tiny muted" style="margin-top:12px;line-height:1.55">The Six Center Skills bars show where you have been practicing, so you can see your growth edge. They are a map of attention, not a report card.</p>
+    </div>
+    <button class="btn block" style="margin-top:16px" onclick="closeSheet()">Understood</button>`);
 }
 
 function openCompass(){

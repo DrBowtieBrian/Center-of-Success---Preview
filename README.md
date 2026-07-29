@@ -9,6 +9,25 @@ On desktop it renders inside a device frame with the brand rail; on a phone it f
 
 ---
 
+## Read this first
+
+[**`docs/CONSTITUTION.md`**](docs/CONSTITUTION.md) is the governing document. The vision,
+the convictions, and the build constraints that follow from them — including what this
+system will not ship, however standard it is elsewhere. Every decision here derives from it.
+
+[**`docs/rafiki-system-prompt.md`**](docs/rafiki-system-prompt.md) is Rafiki's governed
+system prompt, written to that constitution and ready to drop into an API call, with the
+test cases it has to pass first.
+
+Three constraints are already load-bearing in the code, not just described:
+
+- **No streak.** Rhythm is measured in a way that counts rest as rhythm. A mechanic that
+  punishes a day off contradicts the teaching.
+- **Practice is measured; character is not.** Every metric can state what it measures and
+  what it does not — see "What these numbers mean" on the Dashboard.
+- **Non-extraction is structural.** Export everything and delete everything are real
+  mechanisms in the menu, not promises in a policy.
+
 ## What's in the preview
 
 Five tabs, matching the five pillars — SOIL, Trust Loop, CircleUp, Academy, Rafiki.
